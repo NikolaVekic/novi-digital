@@ -5,43 +5,28 @@ import { api } from "../api/http";
 
 type Props = { onAuthed: () => Promise<void> };
 
-export default function Register({ onAuthed }: Props) {
+export default function Login({ onAuthed }: Props) {
   const nav = useNavigate();
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  function validateClient() {
-    if (!form.firstName.trim()) return "First name is required";
-    if (!form.lastName.trim()) return "Last name is required";
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Email is not valid";
-    if (form.password.length < 6)
-      return "Password must be at least 6 characters";
-    return null;
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const msg = validateClient();
-    if (msg) return setError(msg);
+    if (!/^\S+@\S+\.\S+$/.test(form.email))
+      return setError("Email is not valid");
+    if (form.password.length < 6)
+      return setError("Password must be at least 6 characters");
 
     try {
       setLoading(true);
-      await api("/auth/register", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
+      await api("/auth/login", { method: "POST", body: JSON.stringify(form) });
       await onAuthed();
       nav("/home");
     } catch (err: any) {
-      setError(err.message ?? "Registration failed");
+      setError(err.message ?? "Login failed");
     } finally {
       setLoading(false);
     }
@@ -51,22 +36,8 @@ export default function Register({ onAuthed }: Props) {
     "rounded-2xl border border-neutral-200 bg-white/90 px-4 py-3 outline-none focus:ring-4 focus:ring-neutral-200";
 
   return (
-    <CardShell title="Create your account">
+    <CardShell title="Welcome back">
       <form onSubmit={onSubmit} className="grid gap-3">
-        <input
-          className={input}
-          placeholder="First name"
-          value={form.firstName}
-          onChange={(e) =>
-            setForm((p) => ({ ...p, firstName: e.target.value }))
-          }
-        />
-        <input
-          className={input}
-          placeholder="Last name"
-          value={form.lastName}
-          onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))}
-        />
         <input
           className={input}
           placeholder="Email"
@@ -86,19 +57,19 @@ export default function Register({ onAuthed }: Props) {
           className="mt-2 rounded-2xl cursor-pointer bg-neutral-900 px-4 py-3 text-white shadow-sm hover:bg-neutral-800 disabled:opacity-60"
           type="submit"
         >
-          {loading ? "Creating..." : "Register"}
+          {loading ? "Signing in..." : "Login"}
         </button>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <p className="text-sm text-neutral-600">
-          Already have an account?{" "}
+          No account yet?{" "}
           <button
             type="button"
             className="underline cursor-pointer"
-            onClick={() => nav("/login")}
+            onClick={() => nav("/register")}
           >
-            Login
+            Register
           </button>
         </p>
       </form>
